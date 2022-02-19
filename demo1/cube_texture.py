@@ -54,6 +54,7 @@ class Scene():
                   [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, -1]],
                   dtype=float)
 
+        # the colors on the points
         c = np.array([[0,1,1,1], [0,0,1,1], [0,0,0,1], [0,1,0,1],
                   [1,1,0,1], [1,1,1,1], [1,0,1,1], [1,0,0,1]],
                   dtype=float)
@@ -61,7 +62,9 @@ class Scene():
         # Texture coords
         t = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
 
+        # the 24 nodes for the faces, 4 for each face - their coords is given with the p array (of length 8)
         faces_p = [0, 1, 2, 3,   0, 3, 4, 5,   0, 5, 6, 1,   1, 6, 7, 2,   7, 4, 3, 2,    4, 7, 6, 5]
+        # the 24 nodes for the texture, 4 for each face - their coords is given with the t array (of length 4)- the 4 corner of the image
         faces_t = [0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,   3, 2, 1, 0,   0, 1, 2, 3,    0, 1, 2, 3]
 
         # list of vertices : 6 faces with for each 4 vertices : use faces_p indexes 
@@ -70,11 +73,15 @@ class Scene():
         self.vertices['color'] = c[faces_p]
         self.vertices['texcoord'] = t[faces_t]
 
+        print("--- vertex buffer -----------------")
         print(self.vertices)
 
-        # index buffer
+        # index buffer - of size 36 = 12 triangles * 3 nodes
         self.filled = np.resize(np.array([0, 1, 2, 0, 2, 3], dtype=itype), 6 * (2 * 3))
         self.filled += np.repeat(4 * np.arange(6, dtype=itype), 6)
+        
+        print("--- index buffer -----------------")
+        print(self.filled)
 
         self.nb_float = 24 * Vertex.nb_float
         self.nb_int = 36
@@ -308,7 +315,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.model = QMatrix4x4()
         self.model.setToIdentity()
         self.model.rotate(self.theta, 0, 0, 1)
-        self.model.rotate(self.phi, 0, 1, 0)
+        self.model.rotate(self.phi, 0.4, 1, 0)
         
         self.update()
 

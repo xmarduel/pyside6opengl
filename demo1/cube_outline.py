@@ -61,7 +61,7 @@ class Scene():
         self.nb_float = self.nb_vertex * Vertex.nb_float
 
         self.nb_triangles = 12
-        self.nb_int = self.nb_triangles * 3
+        self.nb_int_tri = self.nb_triangles * 3
 
         self.nb_edges = 12
         self.nb_int_edge = self.nb_edges * 2
@@ -195,7 +195,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
 
         self.ibo.create() # QOpenGLBuffer.IndexBuffer
         self.ibo.bind()
-        self.ibo.allocate(self.scene.const_index_data(), self.scene.nb_int * self.int_size)
+        self.ibo.allocate(self.scene.const_index_data(), self.scene.nb_int_tri * self.int_size)
 
         self.ebo.create() # QOpenGLBuffer.IndexBuffer
         self.ebo.bind()
