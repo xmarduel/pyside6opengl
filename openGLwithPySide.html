@@ -7,8 +7,8 @@
   <link href="css/simpletree.css" rel="stylesheet">
   <script type="text/javascript" src="js/prism.js">
  </script>
- <style>
-.accordion {
+  <style>
+ .accordion {
   background-color: #eee;
   color: #444;
   cursor: pointer;
@@ -21,17 +21,16 @@
   transition: 0.4s;
 }
 
-.active, .accordion:hover {
+ .active, .accordion:hover {
   background-color: #ccc; 
 }
 
-.panel {
+ .panel {
   padding: 0 18px;
   display: none;
   background-color: white;
   overflow: hidden;
-}
-</style>
+}</style>
 </head>
 
 <body>
@@ -69,15 +68,29 @@
       <li><a href="#P-04-06">Varying color</a></li>
     </ul>
   </li>
-  <li><a href="#P-05">PySide6 and OpenGL</a></li>
+  <li><a href="#P-05">PySide6 - Basic Examples</a>
+    <ul class="tree">
+      <li><a href="#P-05-01">A blue quad</a></li>
+      <li><a href="#P-05-02">A colored quad</a></li>
+      <li><a href="#P-05-03">A colored quad - animated</a></li>
+      <li><a href="#P-05-04">A cube</a></li>
+      <li><a href="#P-05-05">A cube with outlined edges</a></li>
+      <li><a href="#P-05-06">A cube with texture</a></li>
+    </ul>
+  </li>
+  <li><a href="#P-06">PySide6 - Handling the mouse </a>
+   <ul class="tree">
+      <li><a href="#P-06-01">TODO - An improved Widget</a></li>
+    </ul>
+  </li>
+  <li><a href="#P-07">PySide6 - Simulation Widgets</a>
   <ul class="tree">
-    <li><a href="#P-05-01">A blue quad</a></li>
-    <li><a href="#P-05-02">A colored quad</a></li>
-    <li><a href="#P-05-03">A colored quad - animated</a></li>
-    <li><a href="#P-05-04">A cube</a></li>
-    <li><a href="#P-05-05">A cube with outlined edges</a></li>
-    <li><a href="#P-05-06">A cube with texture</a></li>
-  </ul>
+      <li><a href="#P-07-01">TODO - Slider</a></li>
+	  <li><a href="#P-07-02">TODO - Run/Stop Animation</a></li>
+    </ul>
+  </li>
+  <li><a href="#P-08">TODO - PySide6 - Moving the tool along the path</a></li>
+  <li><a href="#P-09">TODO - PySide6 - Simulating the milling process</a></li>
 </ul>
 <script type="text/javascript">
 var tree = document.querySelectorAll('ul.tree a:not(:last-child)');
@@ -114,33 +127,39 @@ for (var i = 0; i < tree.length; i++){
 <h2 id="P-01">Introduction</h2>
 
 <p>This is a small tutorial how to program OpenGL with PySide6. Please note
-that I am an absolute OpenGL beginner. I have simply ported Candle GCode viewer
-from (Qt) c++ to python. This is been a good introduction in OpenGL for me.</p>
+that I am an absolute OpenGL beginner. I have simply ported
+<strong>Candle</strong> GCode viewer from (Qt) c++ to python. This is been a
+good introduction in OpenGL for me.</p>
 
-<p>But trying to port jsCut gcode simulator (javascript) to python was
-something harder. Infact, I have not yet succeeded, althought the javascript
-code is only 800 lines of code. There are there 3 different shader programs
-with one (or two!) with a texture, that allows to simulate the milling process.
-It's quite impressive and unfortunately from the code I have not yet understood
-how the texture allows to simulate the milling process. Probably this is the
-cause I'm still unsuccessfull...</p>
+<p>But trying to port <strong>jsCut</strong> gcode simulator (javascript) to
+python was something harder. Infact, I have not yet succeeded, althought the
+javascript code is only 800 lines of code. There are there 3 different shader
+programs with one (or two!) with a texture, that allows to simulate the milling
+process. It's quite impressive and unfortunately from the code I have not yet
+understood how the texture allows to simulate the milling process. Probably
+this is the cause I'm still unsuccessfull...</p>
 
 <p>Moreover I do not believe that the python code will be less that the
 javascript code, although this is oft the case when translating javascript to
-python. Maybe the webgl API is here particularely well designed and compct.</p>
+python. Maybe the webgl API is here particularely well designed and compact.</p>
 
 <p>This led me to write this small tutorial. I am picking for it from the
 internet the pages I found interesting and best explained.</p>
 <ul>
-  <li><a href="https://www.labri.fr/perso/nrougier/python-opengl/"><span style="color:#8000ff">Python &amp; OpenGL for Scientific Visualization</span></a></li>
-  <li><a href="https://ghorwin.github.io/OpenGLWithQt-Tutorial/"><span style="color:#8000ff">OpenGL + Qt Tutorial </span></a></li>
+  <li><a href="https://www.labri.fr/perso/nrougier/python-opengl/"><span
+    style="color:#8000ff">Python &amp; OpenGL for Scientific
+    Visualization</span></a></li>
+  <li><a href="https://ghorwin.github.io/OpenGLWithQt-Tutorial/"><span
+    style="color:#8000ff">OpenGL + Qt Tutorial </span></a></li>
 </ul>
 
 <p>The first is an excellent introduction to OpenGL, but unfortunately it
 diverges from its goal after the first chapters. It uses its own magic "glumpy"
 library to encapsulate most of OpenGL, for me too much python magic. But most
 important, it does not explain how to use the glumpy/gloo magic inside an
-PySide (Qt) application.</p>
+PySide (Qt) application. And further, the tutorial diverges from "my goal" of
+learning openGL: it starts explaining how to draw anti-aliased text or
+beautiful lines, and all other things I'm not interested in...</p>
 
 <p>The latter is a very nice comparaison (in c++) of raw OpenGL versus the Qt
 "port", where Qt encapsulates -partly- OpenGL in its own classes, leading to a
@@ -149,6 +168,15 @@ comparaison in python.</p>
 
 <p><strong><span style="color:#0000ff">In both case I will add my own comments
 to the original text, for what I consider to be important!</span></strong></p>
+
+<p></p>
+
+<p><strong style="color:#008000">The final goal of the tutorial is to (to able
+to) write a PySide6 app (or widget) simulating the milling process, given a
+gcode data. The gcode may only be produced from the PyCut app, so this is very
+basic gcode.</strong></p>
+
+<p></p>
 
 <h2 id="P-02">OpenGL Primer</h2>
 
@@ -339,7 +367,6 @@ on screen). This is called Normalized Device Coordinates, or NDC for short.
 This is something you cannot change because it is part of the OpenGL API and
 implemented in your hardware (GPU). Consequently, even if you intend to render
 the whole universe, you'll have utlimately to fit it into this small volume.</p>
-
 <img src="doc_images/OpenGL_viewport.png" width="282px" alt=""> 
 
 <p>The second important fact to know is that x coordinates increase from left
@@ -358,7 +385,6 @@ of the closeness to the approximated surface, the number of triangles necessary
 (the smaller, the better) and the homogeneity of the triangles (we prefer to
 have triangles that have more or less the same size and to not have any
 degenerated triangle).</p>
-
 <img src="doc_images/OpenGL_triangulations.png" width="271px" alt=""> 
 
 <p>In our case, we want to render a square and we need to find the proper
@@ -395,7 +421,6 @@ what to do with the vertices, i.e. how to render them? What do they describe in
 terms of geometrical primitives? This is quite an important topic since this
 will determine how fragments will actually be generated as illustrated on the
 image below:</p>
-
 <img src="doc_images/OpenGL_primitives.png" width="315px" alt=""> 
 
 <p>Mostly, OpenGL knows how to draw (ugly) points, (ugly) lines and (ugly)
@@ -431,7 +456,6 @@ figure). One of the legitimate questions to be solved is then: if I have a
 triangle (V₁,V₂,V₃), each summit vertex having (for example) a different
 color, what is the color of a fragment p inside the triangle? The answer is
 barycentric interpolation as illustrated on the figure on the right.</p>
-
 <img src="doc_images/OpenGL_interpolation.png" width="307px" alt=""> 
 
 <p>More precisely, for any point p inside a triangle A = (V₁,V₂,V₃), we
@@ -444,14 +468,14 @@ consider triangles:</p>
 
 <p>And we can define (using area of triangles):</p>
 <ul>
-  <li>𝛌₁ = A₁/A</li>
-  <li>𝛌₂ = A₂/A</li>
-  <li>𝛌₃ = A₃/A</li>
+  <li>훌₁ = A₁/A</li>
+  <li>훌₂ = A₂/A</li>
+  <li>훌₃ = A₃/A</li>
 </ul>
 
 <p>Now, if we attach a value f₁ to vertex V₁, f₂ to vertex V₂ and f₃
-to vertex V₃, the interpolated value f of p is given by: f = 𝛌₁f₁ +
-𝛌₂f₂ + 𝛌₃f₃ You can check by yourself that if the point p is on a
+to vertex V₃, the interpolated value f of p is given by: f = 훌₁f₁ +
+훌₂f₂ + 훌₃f₃ You can check by yourself that if the point p is on a
 border of the triangle, the resulting interpolated value f is the linear
 interpolation of the two vertices defining the segment the point p belongs
 to.</p>
@@ -821,12 +845,13 @@ especially if the arrays are from different buffers. But at the end, not the
 buffers are relevant, but the
 <em>VertexAttribArrays</em>/<em>VertexAttribPointer</em>.</strong></p>
 
-<p>We now translate Mr. Rougier examples so that they work with PySide. They become thus more lines of code,
-  but without the glumpy magic.</p>
+<p>We now translate Mr. Rougier examples so that they work with PySide. They
+become thus more lines of code, but without the glumpy magic.</p>
 
 <h2 id="P-05">PySide6 and OpenGL</h2>
 
-<p>I have tried to make the code as short as possible without sacrifying the readability</p>
+<p>I have tried to make the code as short as possible without sacrifying the
+readability</p>
 
 <h3 id="P-05-01" class="accordion">A blue quad</h3>
 
@@ -869,7 +894,7 @@ class Vertex:
         self.position = position
 
     @classmethod
-    def toNumpyArray(cls, vertices: List['Vertex']) -> np.ndarray:
+    def toNumpyArray(cls, vertices: List['Vertex']) -&gt; np.ndarray:
         # fill the numpy array - each vertex is composed of 2 float
         np_array = np.empty(len(vertices) * cls.nb_float, dtype=ctypes.c_float)
     
@@ -990,21 +1015,21 @@ if __name__ == '__main__':
     main_window.show()
 
     res = app.exec()
-    sys.exit(res)
-</code></pre>
+    sys.exit(res)</code></pre>
 </div>
 
-<p>In this first basic example, a <strong>Vertex</strong> class is defined (as in all further examples) to hold the properties
-of the vertices. In this case, only the position x and y of the vertices.</p>
-<p>The <strong>Vertex</strong> class also contains the method to generate a numpy array from a list of vertices,
- while the <strong>Scene</strong> class creates itself the list of vertices. Here there are only 2 triangles
- and 6 vertices.</p>
+<p>In this first basic example, a <strong>Vertex</strong> class is defined (as
+in all further examples) to hold the properties of the vertices. In this case,
+only the position x and y of the vertices.</p>
 
+<p>The <strong>Vertex</strong> class also contains the method to generate a
+numpy array from a list of vertices, while the <strong>Scene</strong> class
+creates itself the list of vertices. Here there are only 2 triangles and 6
+vertices.</p>
 
 <h3 id="P-05-02" class="accordion">A colored quad</h3>
 
 <div class="panel">
-
 <pre style="background: #f2f2f2;"><code class="language-python">...
 
 class Vertex:
@@ -1020,7 +1045,7 @@ class Vertex:
         self.color = color
 
     @classmethod
-    def toNumpyArray(cls, vertices: List['Vertex']) -> np.ndarray:
+    def toNumpyArray(cls, vertices: List['Vertex']) -&gt; np.ndarray:
         # fill the numpy array - each vertex is composed of 6 float
         np_array = np.empty(len(vertices) * cls.nb_float, dtype=ctypes.c_float)
 
@@ -1095,22 +1120,23 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.program.setAttributeBuffer(colorLocation, GL.GL_FLOAT, offset, size, stride)
 
         self.vbo.release()
-    ...
-</code></pre>
+    ...</code></pre>
 </div>
 
-<p>This time, the color of the vertices is also packed in the <strong>Vertex</strong> data, 
-so the <strong>Vertex</strong> definition is more interessant.</p>
-<p>Note how the properties of the <strong>Vertex</strong> class (stride, offsets, positions) are used 
-in the OpenGL widget 
-<strong>"setup_vertex_attribs"</strong> method
-to correctly setup the <strong>shader program</strong>.</p>
-<p>The <strong>Scene</strong> properties <strong>nb_float<strong> and </strong>nb_vertex</strong> 
-are also used, the first one in <strong>"setup_vertex_attribs"</strong>, the second one in the
-openGL function :</p>
+<p>This time, the color of the vertices is also packed in the
+<strong>Vertex</strong> data, so the <strong>Vertex</strong> definition is more
+interessant.</p>
 
-<pre style="background: #ffffff;"><code class="language-python">self.glDrawArrays(GL.GL_TRIANGLES, 0, self.scene.nb_vertex)
-</code></pre>
+<p>Note how the properties of the <strong>Vertex</strong> class (stride,
+offsets, positions) are used in the OpenGL widget
+<strong>"setup_vertex_attribs"</strong> method to correctly setup the
+<strong>shader program</strong>.</p>
+
+<p>The <strong>Scene</strong> properties <strong>nb_float<strong>and
+</strong>nb_vertex</strong> are also used, the first one in
+<strong>"setup_vertex_attribs"</strong>, the second one in the openGL function
+:</p>
+<pre style="background: #ffffff;"><code class="language-python">self.glDrawArrays(GL.GL_TRIANGLES, 0, self.scene.nb_vertex)</code></pre>
 
 <h3 id="P-05-03" class="accordion">A colored quad - animated</h3>
 
@@ -1180,15 +1206,15 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.timer += 0.25 * math.pi/180.0
         self.scale = math.cos(self.timer)
 
-        self.update()
-</code></pre>
+        self.update()</code></pre>
 </div>
 
-<p>We further expand the <strong>Vertex</strong> class with a scale factor, 
-so the <strong>setup_vertex_attribs</strong> method is also updated.</p>
-<p>The programmer has only to care of not mixing <strong>uniformLocation</strong> with 
-<strong>attributeLocation</strong> function calls
-for the respective shaders variables</p>
+<p>We further expand the <strong>Vertex</strong> class with a scale factor, so
+the <strong>setup_vertex_attribs</strong> method is also updated.</p>
+
+<p>The programmer has only to care of not mixing
+<strong>uniformLocation</strong> with <strong>attributeLocation</strong>
+function calls for the respective shaders variables</p>
 
 <h3 id="P-05-04" class="accordion">A cube</h3>
 
@@ -1208,7 +1234,7 @@ class Vertex:
         self.color = color
 
     @classmethod
-    def toNumpyArray(cls, vertices: List['Vertex']) -> np.ndarray:
+    def toNumpyArray(cls, vertices: List['Vertex']) -&gt; np.ndarray:
         np_array = np.empty(len(vertices) * cls.nb_float, dtype=ctypes.c_float)
 
         for k, vertex in enumerate(vertices):
@@ -1234,7 +1260,7 @@ class Scene():
         self.nb_triangles = 12
         self.nb_int = self.nb_triangles * 3
 
-        # 8 vertices -> VertexBuffer
+        # 8 vertices -&gt; VertexBuffer
         vertices : List[Vertex] = []
 
         vertices.append( Vertex(QVector3D( 1, 1, 1), QVector4D(0,1,1,1)) )
@@ -1249,7 +1275,7 @@ class Scene():
         # fill the numpy array
         self.m_data = Vertex.toNumpyArray(vertices)
 
-        # shared by 12 triangles -> IndexBuffer
+        # shared by 12 triangles -&gt; IndexBuffer
         self.i_data = np.array([
                 0,1,2, 
                 0,2,3,  
@@ -1430,19 +1456,20 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.model.rotate(self.phi, 0, 1, 0)
         
         self.update()
-
-
 </code></pre>
 </div>
 
 <p>The full cube demo is 270 lines long</p>
-<p>This times, vertices are shared between the triangles, so we do not use anymore the <strong>glDrawArrays</strong>, 
-but instead the <strong><code>glDrawElements</code></strong> method together with an <strong>indexBuffer</strong>.</p>
-<p>Please inspect the code carefully and check that the 8 vertices define the 12 triangles.</p>
+
+<p>This times, vertices are shared between the triangles, so we do not use
+anymore the <strong>glDrawArrays</strong>, but instead the
+<strong><code>glDrawElements</code></strong> method together with an
+<strong>indexBuffer</strong>.</p>
+
+<p>Please inspect the code carefully and check that the 8 vertices define the
+12 triangles.</p>
 
 <p>The GLWidget defines 2 buffers, the vertex buffer and the index buffer</p>
-
-
 
 <h3 id="P-05-05" class="accordion">A cube with outlined edges</h3>
 
@@ -1487,7 +1514,7 @@ class Vertex:
         self.color = color
 
     @classmethod
-    def toNumpyArray(cls, vertices: List['Vertex']) -> np.ndarray:
+    def toNumpyArray(cls, vertices: List['Vertex']) -&gt; np.ndarray:
         np_array = np.empty(len(vertices) * cls.nb_float, dtype=ctypes.c_float)
 
         for k, vertex in enumerate(vertices):
@@ -1516,7 +1543,7 @@ class Scene():
         self.nb_edges = 12
         self.nb_int_edge = self.nb_edges * 2
                    
-        # 8 vertices -> VertexBuffer
+        # 8 vertices -&gt; VertexBuffer
         vertices : List[Vertex] = []
 
         vertices.append( Vertex(QVector3D( 1, 1, 1), QVector4D(0,1,1,1)) )
@@ -1531,7 +1558,7 @@ class Scene():
         # fill the numpy array
         self.m_data = Vertex.toNumpyArray(vertices)
 
-        # shared by 12 triangles -> IndexBuffer
+        # shared by 12 triangles -&gt; IndexBuffer
         self.i_data = np.array([
                 0,1,2, 
                 0,2,3,  
@@ -1756,17 +1783,18 @@ if __name__ == '__main__':
     main_window.show()
 
     res = app.exec()
-    sys.exit(res)
-</code></pre>
+    sys.exit(res)</code></pre>
 </div>
 
-<p>A small increment from the cube demo. We define 2 index buffers, the second one used to draw lines on the cube.</p>
-<p>So there are 2 calls to the <strong><code>self.glDrawArrays</code></strong> method. See how in the 
-<strong><code>paintGL</code></strong> method we can make calls to the shader program methods, this time </p>
-<pre style="background: #f2f2f2;"><code class="language-python">self.program.setUniformValue(gcolorLocation, QVector4D(0, 0, 0, 1))
-</code></pre>
-<p> in order to draw the line black.</p>
+<p>A small increment from the cube demo. We define 2 index buffers, the second
+one used to draw lines on the cube.</p>
 
+<p>So there are 2 calls to the <strong><code>self.glDrawArrays</code></strong>
+method. See how in the <strong><code>paintGL</code></strong> method we can make
+calls to the shader program methods, this time </p>
+<pre style="background: #f2f2f2;"><code class="language-python">self.program.setUniformValue(gcolorLocation, QVector4D(0, 0, 0, 1))</code></pre>
+
+<p>in order to draw the line black.</p>
 
 <h3 id="P-05-06" class="accordion">A cube with texture</h3>
 
@@ -1827,7 +1855,7 @@ class Scene():
                   dtype=float)
     
         # the colors on the points
-		c = np.array([[0,1,1,1], [0,0,1,1], [0,0,0,1], [0,1,0,1],
+                c = np.array([[0,1,1,1], [0,0,1,1], [0,0,0,1], [0,1,0,1],
                   [1,1,0,1], [1,1,1,1], [1,0,1,1], [1,0,0,1]],
                   dtype=float)
     
@@ -1835,9 +1863,9 @@ class Scene():
         t = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
     
         # the 24 nodes for the faces, 4 for each face - their coords is given with the p array (of length 8)
-		faces_p = [0, 1, 2, 3,   0, 3, 4, 5,   0, 5, 6, 1,   1, 6, 7, 2,   7, 4, 3, 2,    4, 7, 6, 5]
+                faces_p = [0, 1, 2, 3,   0, 3, 4, 5,   0, 5, 6, 1,   1, 6, 7, 2,   7, 4, 3, 2,    4, 7, 6, 5]
         # the 24 nodes for the texture, 4 for each face - their coords is given with the t array (of length 4) - the 4 corner of the image
-		faces_t = [0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,   3, 2, 1, 0,   0, 1, 2, 3,    0, 1, 2, 3]
+                faces_t = [0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,   3, 2, 1, 0,   0, 1, 2, 3,    0, 1, 2, 3]
     
         # list of vertices : 6 faces with for each 4 vertices : use faces_p indexes 
         self.vertices = np.zeros(24, vtype)
@@ -2059,7 +2087,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
     
         # --------------------------------------------------------------------------------------------------------
         # --------------------------------------------------------------------------------------------------------
-        self.texture.bind(0) # bind texture to texture index i -> accessible in fragment shader through "texture"
+        self.texture.bind(0) # bind texture to texture index i -&gt; accessible in fragment shader through "texture"
         # --------------------------------------------------------------------------------------------------------
         # --------------------------------------------------------------------------------------------------------
     
@@ -2085,89 +2113,105 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.model.rotate(self.theta, 0, 0, 1)
         self.model.rotate(self.phi, 0, 1, 0)
             
-        self.update()
-</code></pre>
+        self.update()</code></pre>
 </div>
 
-<p>Authors of openGL books always suggest how easy it is to use textures. I am not quite this opinion...</p>
-<p>So the full code is given here. Numpy arrays are used, and this makes the code compact. Be sure to understand the numpy notation.</p>
-<p>I have also kept the color defs from the previous example so that I can switch between color and textures in the python program.</p>
+<p>Authors of openGL books always suggest how easy it is to use textures. I am
+not quite this opinion...</p>
 
-<p>Because of the texture, the vertices cannot be shared anymore among all triangles. Why? Because for 1 triangle, a given node
-may be mapped to the texture coordinate [0,0], while for another triangle sharing the same node, the node may need the texture
-coordinate [1,1]. Nevertheless, a certain amount of "shared" nodes is still possible. On a face (4 nodes), nodes may be shared
-by the 2 triangles of the face. We need indeed the texture on the 6 faces so we need 6*4 vertices.</p>
- 
-<p>The Vertex class thus still contains the color def, and the texture def is added. Because of the usage of numpy array features, 
-there is no need anymore of our method <code>toNumpyArray</code>. The numpy array is setup on the fly, but the 
-<strong>Vertex</strong> class still define the stride, positions and offsets.</p>
+<p>So the full code is given here. Numpy arrays are used, and this makes the
+code compact. Be sure to understand the numpy notation.</p>
 
-<p>The array <code>self.vertices</code> will be our vertex buffer, while the array <code>self.filled</code> will be 
-the index buffer. What exactly the index buffer contains? Well you can print out the index buffer in the console...</p>
+<p>I have also kept the color defs from the previous example so that I can
+switch between color and textures in the python program.</p>
 
-<pre>
->>> filled = np.resize(np.array([0, 1, 2, 0, 2, 3], dtype=itype), 6 * (2 * 3))
->>> filled
+<p>Because of the texture, the vertices cannot be shared anymore among all
+triangles. Why? Because for 1 triangle, a given node may be mapped to the
+texture coordinate [0,0], while for another triangle sharing the same node, the
+node may need the texture coordinate [1,1]. Nevertheless, a certain amount of
+"shared" nodes is still possible. On a face (4 nodes), nodes may be shared by
+the 2 triangles of the face. We need indeed the texture on the 6 faces so we
+need 6*4 vertices.</p>
+
+<p>The Vertex class thus still contains the color def, and the texture def is
+added. Because of the usage of numpy array features, there is no need anymore
+of our method <code>toNumpyArray</code>. The numpy array is setup on the fly,
+but the <strong>Vertex</strong> class still define the stride, positions and
+offsets.</p>
+
+<p>The array <code>self.vertices</code> will be our vertex buffer, while the
+array <code>self.filled</code> will be the index buffer. What exactly the index
+buffer contains? Well you can print out the index buffer in the console...</p>
+<pre>&gt;&gt;&gt; filled = np.resize(np.array([0, 1, 2, 0, 2, 3], dtype=itype), 6 * (2 * 3))
+&gt;&gt;&gt; filled
 array([0, 1, 2, 0, 2, 3, 0, 1, 2, 0, 2, 3, 0, 1, 2, 0, 2, 3, 0, 1, 2, 0,
        2, 3, 0, 1, 2, 0, 2, 3, 0, 1, 2, 0, 2, 3], dtype=uint32)
->>> filled += np.repeat(4 * np.arange(6, dtype=itype), 6)
->>> filled
-array([ 0,  1,  2,  0,  2,  3,  4,  5,  6,  4,  6,  7,  8,  9, 10,  8, 10,
-       11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20,
-       22, 23], dtype=uint32)
->>>
-</pre>
-<p> This is the definitions of the 12 triangles, each of them having 3 nodes. There are 24 nodes in total. Two triangles on the same
-face do share nodes.</p>
- 
-<p>The vertex buffer and index buffer are allocated/created as usual in the <strong><code>initializeGL</code></strong> function, 
-as well as the texture object. Qt API allows here a user friendly notation.</p>
+&gt;&gt;&gt; filled += np.repeat(4 * np.arange(6, dtype=itype), 6)
+&gt;&gt;&gt; filled
+array([  0,  1,  2,    0,  2,  3,   
+         4,  5,  6,    4,  6,  7, 
+         8,  9, 10,    8, 10, 11, 
+        12, 13, 14,   12, 14, 15,
+        16, 17, 18,   16, 18, 19, 
+        20, 21, 22,   20, 22, 23], dtype=uint32)
+&gt;&gt;&gt;</pre>
 
-<p>At the end of <strong><code>initializeGL</code></strong>, the setup_vertex_attribs is also called (as usual) and this time the offsets/position for the texture 
-is also given. Moreover, a <strong>texture ID</strong> must be specified and written to the shader program at the 
-texture uniform "location" (as defined in the shader fragment program)</p>
+<p>This is the definitions of the 12 triangles, each of them having 3 nodes.
+There are 36 indices in total (array on length 36), for a total of 24 different nodes. 
+Two triangles on the same face do share nodes.</p>
 
+<p>We recognize the pattern: the 24 nodes are "virtually packed" in 6 groups (6 faces)
+of 6 nodes. Each group of 6 nodes allows the defintion for 2 triangles, 
+with these 2 triangles sharing 4 real nodes: the 4 nodes of a face.</p>
+
+
+<p>The vertex buffer and index buffer are allocated/created as usual in the
+<strong><code>initializeGL</code></strong> function, as well as the texture
+object. Qt API allows here a user friendly notation.</p>
+
+<p>At the end of <strong><code>initializeGL</code></strong>, the
+setup_vertex_attribs is also called (as usual) and this time the
+offsets/position for the texture is also given. Moreover, a <strong>texture
+ID</strong> must be specified and written to the shader program at the texture
+uniform "location" (as defined in the shader fragment program)</p>
 <pre style="background: #f2f2f2;"><code class="language-python"># --------------------------------- the texture ------------------------------------------
 # uniform for fragment texture
 textureLocationID = self.program.uniformLocation("texture")
 self.program.setUniformValue(textureLocationID, 0) # the index of the texture
-# --------------------------------- the texture ------------------------------------------
-</code></pre>
+# --------------------------------- the texture ------------------------------------------</code></pre>
 
 <p>Be sure to call this at the right place!</p>
 
-<p>Finally, in the <strong><code>paintGL</code></strong> method, we call as usual the
- <strong><code>glDrawElements</code></strong> method, but before this call have to bind the texture by its ID:</p>
-
+<p>Finally, in the <strong><code>paintGL</code></strong> method, we call as
+usual the <strong><code>glDrawElements</code></strong> method, but before this
+call have to bind the texture by its ID:</p>
 <pre style="background: #f2f2f2;"><code class="language-python"># --------------------------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
-self.texture.bind(0) # bind texture to texture index 0 -> accessible in fragment shader through "texture"
+self.texture.bind(0) # bind texture to texture index 0 -&gt; accessible in fragment shader through "texture"
 # --------------------------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------------
 
 # Filled cube
-self.glDrawElements(GL.GL_TRIANGLES, 12*3, GL.GL_UNSIGNED_INT, self.scene.const_index_data())
-</code></pre>
+self.glDrawElements(GL.GL_TRIANGLES, 12*3, GL.GL_UNSIGNED_INT, self.scene.const_index_data())</code></pre>
 
 <p>Simple, itsn't it! </p>
 
-<p>Let's recapitulize: as in the previous example, the <strong><code>glDrawElements</code></strong> method is used, 
-with a somehow different index buffer (because the list of vertices is different). But where are exactly the differences? </p>
+<p>Let's recapitulize: as in the previous example, the
+<strong><code>glDrawElements</code></strong> method is used, with a somehow
+different index buffer (because the list of vertices is different). But where
+are exactly the differences? </p>
 
-<p>Inside a vertex data, the <strong><code>textcoords</code></strong> have to be specified instead of the 
-<strong>color</strong> values.</p>
+<p>Inside a vertex data, the <strong><code>textcoords</code></strong> have to
+be specified instead of the <strong>color</strong> values.</p>
 
-<p>For each of the 24 nodes, each node must have a texture coordinate, which can be 
-<code>[0,0], [0,1], [1,1]</code> or <code>[1,0]</code>.
-To do so, it was easier to define groups of 4 nodes, each group for each side of the cube: The numpy compact notation 
-makes the whole somehow obscure...</p>
-
-
+<p>For each of the 24 nodes, each node must have a texture coordinate, which
+can be <code>[0,0], [0,1], [1,1]</code> or <code>[1,0]</code>. To do so, it was
+easier to define groups of 4 nodes, each group for each side of the cube: The
+numpy compact notation makes the whole somehow obscure...</p>
 <!-- ----------------------------------------------------------------------------------------------------------->
 <!-- ----------------------------------------------------------------------------------------------------------->
 </div>
-
-<script>
+<script type="text/javascript">
 var acc = document.getElementsByClassName("accordion");
 var i;
 
@@ -2181,8 +2225,6 @@ for (i = 0; i < acc.length; i++) {
       panel.style.display = "block";
     }
   });
-}
-</script>
-
+}</script>
 </body>
 </html>
