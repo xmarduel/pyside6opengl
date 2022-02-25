@@ -4,15 +4,15 @@ import math
 import numpy as np
 import sys
 
-from PySide6.QtCore import (QSize, QPoint, QBasicTimer)
-from PySide6.QtGui import (QColor, QOpenGLFunctions, QVector2D, QVector3D, QVector4D, QMatrix4x4, QImage)
+from PySide6.QtCore import (QSize, QPoint)
+from PySide6.QtGui import (QOpenGLFunctions, QVector2D, QVector3D, QVector4D, QMatrix4x4, QImage)
 from PySide6.QtWidgets import (QApplication, QMainWindow)
 
 from PySide6 import QtWidgets
 from PySide6 import QtCore
 from PySide6 import QtGui
 
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Signal
 
 from PySide6.QtOpenGL import (QOpenGLVertexArrayObject, QOpenGLBuffer, QOpenGLShaderProgram, QOpenGLShader, QOpenGLTexture)
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
@@ -74,7 +74,7 @@ class Scene():
         # the 24 nodes for the faces, 4 for each face - their coords is given with the p array (of length 8)
         faces_p = [0, 1, 2, 3,   0, 3, 4, 5,   0, 5, 6, 1,   1, 6, 7, 2,   7, 4, 3, 2,    4, 7, 6, 5]
         # the 24 nodes for the texture, 4 for each face - their coords is given with the t array (of length 4)- the 4 corner of the image
-        faces_t = [0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,   3, 2, 1, 0,   0, 1, 2, 3,    0, 1, 2, 3]
+        faces_t = [0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,   0, 1, 2, 3,    0, 1, 2, 3]
 
         # list of vertices : 6 faces with for each 4 vertices : use faces_p indexes 
         self.vertices = np.zeros(24, vtype)
@@ -102,6 +102,14 @@ class Scene():
 
     def const_index_data(self):
         return self.filled.tobytes()
+
+    def getMinimumExtremes(self) -> QVector3D : 
+        return QVector3D(-1, -1, -1)
+
+    def getMaximumExtremes(self) -> QVector3D :
+        return QVector3D(1, 1, 1)
+    
+
 
 class GLWidget(QOpenGLWidget, QOpenGLFunctions):
     '''
@@ -301,7 +309,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.m_distance = max(a, b)
 
         if self.m_distance == 0:
-            self.m_distance = 200
+            self.m_distance = 10
 
         self.m_xLookAt = (self.m_xMax - self.m_xMin) / 2 + self.m_xMin
         self.m_zLookAt = -((self.m_yMax - self.m_yMin) / 2 + self.m_yMin)
@@ -324,23 +332,14 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         return angle
 
     def updateExtremes(self):
-        #self.m_xMin = self.program.getMinimumExtremes().x() 
-        #self.m_xMax = self.program.getMaximumExtremes().x() 
+        self.m_xMin = self.scene.getMinimumExtremes().x() 
+        self.m_xMax = self.scene.getMaximumExtremes().x() 
         
-        #self.m_yMin = self.program.getMinimumExtremes().y() 
-        #self.m_yMax = self.program.getMaximumExtremes().y() 
+        self.m_yMin = self.scene.getMinimumExtremes().y() 
+        self.m_yMax = self.scene.getMaximumExtremes().y() 
         
-        #self.m_zMin = self.program.getMinimumExtremes().z()
-        #self.m_zMax = self.program.getMaximumExtremes().z() 
-       
-        self.m_xMin = -1
-        self.m_xMax = 1
-        
-        self.m_yMin = -1
-        self.m_yMax = 1
-        
-        self.m_zMin = -1
-        self.m_zMax = 1
+        self.m_zMin = self.scene.getMinimumExtremes().z()
+        self.m_zMax = self.scene.getMaximumExtremes().z() 
 
         self.m_xSize = self.m_xMax - self.m_xMin
         self.m_ySize = self.m_yMax - self.m_yMin
