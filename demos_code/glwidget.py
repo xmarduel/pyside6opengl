@@ -227,11 +227,11 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.cmdFront.setToolTip("Front view")
         self.cmdLeft.setToolTip("Left view")
 
-        self.cmdFit.setIcon(QtGui.QIcon(":/images/candle/fit_1.png"))
-        self.cmdIsometric.setIcon(QtGui.QIcon(":/images/candle/cube.png"))
-        self.cmdTop.setIcon(QtGui.QIcon(":/images/candle/cubeTop.png"))
-        self.cmdFront.setIcon(QtGui.QIcon(":/images/candle/cubeFront.png"))
-        self.cmdLeft.setIcon(QtGui.QIcon(":/images/candle/cubeLeft.png"))
+        self.cmdFit.setIcon(QtGui.QIcon("./fit_1.png"))
+        self.cmdIsometric.setIcon(QtGui.QIcon("./cube.png"))
+        self.cmdTop.setIcon(QtGui.QIcon("./cubeTop.png"))
+        self.cmdFront.setIcon(QtGui.QIcon("./cubeFront.png"))
+        self.cmdLeft.setIcon(QtGui.QIcon("./cubeLeft.png"))
 
         self.cmdFit.clicked.connect(self.on_cmdFit_clicked)
         self.cmdIsometric.clicked.connect(self.on_cmdIsometric_clicked)
@@ -285,17 +285,13 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.onVisualizatorRotationChanged()
 
     def on_cmdFit_clicked(self):
-        splitter = self.parent()
-        gl_widget_container = splitter.parent()
-
-        if hasattr(gl_widget_container, "m_currentDrawer") and gl_widget_container.m_currentDrawer is not None:
-            self.fitDrawable(gl_widget_container.m_currentDrawer)
+        self.fitDrawable()
 
     def calculateVolume(self, size: QtGui.QVector3D) -> float:
         return size.x() * size.y() * size.z()
 
     def fitDrawable(self):
-        self.updateExtremes(self.program)
+        self.updateExtremes()
 
         a = self.m_ySize / 2 / 0.25 * 1.3 + \
             (self.m_zMax - self.m_zMin) / 2
@@ -328,15 +324,24 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         return angle
 
     def updateExtremes(self):
-        self.m_xMin = self.program.getMinimumExtremes().x() 
-        self.m_xMax = self.program.getMaximumExtremes().x() 
+        #self.m_xMin = self.program.getMinimumExtremes().x() 
+        #self.m_xMax = self.program.getMaximumExtremes().x() 
         
-        self.m_yMin = self.program.getMinimumExtremes().y() 
-        self.m_yMax = self.program.getMaximumExtremes().y() 
+        #self.m_yMin = self.program.getMinimumExtremes().y() 
+        #self.m_yMax = self.program.getMaximumExtremes().y() 
         
-        self.m_zMin = self.program.getMinimumExtremes().z()
-        self.m_zMax = self.program.getMaximumExtremes().z() 
+        #self.m_zMin = self.program.getMinimumExtremes().z()
+        #self.m_zMax = self.program.getMaximumExtremes().z() 
        
+        self.m_xMin = -1
+        self.m_xMax = 1
+        
+        self.m_yMin = -1
+        self.m_yMax = 1
+        
+        self.m_zMin = -1
+        self.m_zMax = 1
+
         self.m_xSize = self.m_xMax - self.m_xMin
         self.m_ySize = self.m_yMax - self.m_yMin
         self.m_zSize = self.m_zMax - self.m_zMin
