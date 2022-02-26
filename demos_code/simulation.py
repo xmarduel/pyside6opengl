@@ -1,5 +1,4 @@
 
-from argparse import Action
 import ctypes
 import math
 import numpy as np
@@ -27,20 +26,17 @@ M_PI = math.acos(-1)
 ZOOMSTEP = 1.1
 
 
-def loadUi(uifile, baseinstance=None):
+
+class Simulation(QtCore.QObject):
     '''
     '''
-    loader = QUiLoader(baseinstance)
+    current_time_changed = Signal(float)
 
-    widget = loader.load(uifile)
+    def __init__(self, parent, init_time, end_time, delta):
+        QtCore.QObject.__init__(self)
 
-    return widget
-
-
-class Simulation:
-    '''
-    '''
-    def __init__(self, init_time, end_time, delta):
+        self.parent = parent
+        
         self.init_time = init_time
         self.end_time = end_time
         self.delta = delta
@@ -49,31 +45,28 @@ class Simulation:
 
         self.current_time = self.init_time
 
-        self.view_state = {
-            "theta" : 0,
-            "phi": 0
-        }
+        # translating the model during the simulation 
+        self.model_position = QVector3D(0, 0, 0)
 
         self.set_current_time(self.end_time)
+        self.current_time_changed.connect(self.parent.sim_time_changed)
 
         self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update)
+        self.timer.timeout.connect(self.run)
         
         self.timer_on = False
-
+       
     def set_current_time(self, current_time):
+        '''
+        '''
         self.current_time = current_time
-        self.eval_current_view_state()
+        self.model_position = QVector3D(
+            math.sin(2* M_PI * (self.current_time / self.total_time)),
+            -1 + math.cos( 2* M_PI * (self.current_time / self.total_time)),
+            math.sin(2 * M_PI * (self.current_time / self.total_time))
+        )
 
-    def eval_current_view_state(self):
-        '''
-        should act on the model, not on the view,
-        but it is a beginning...
-        '''
-        self.view_state = {
-            "theta" : M_PI * (self.current_time / self.total_time),
-            "phi": M_PI * (self.current_time / self.total_time),
-        }
+        self.current_time_changed.emit(self.current_time)
 
     def start_timer(self):
         if self.timer_on == False:
@@ -85,8 +78,11 @@ class Simulation:
             self.timer.stop()
             self.timer_on = False
 
-    def update(self):
-        current_time = self.current_time = self.delta
+    def run(self):
+        '''
+        callback on timer
+        '''
+        current_time = self.current_time + self.delta
         
         if current_time >= self.end_time:
             current_time = self.init_time
@@ -95,6 +91,10 @@ class Simulation:
 
 
 class Window(QMainWindow):
+    '''
+    '''
+    update_gl_scene = Signal()
+
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
@@ -102,7 +102,7 @@ class Window(QMainWindow):
         self.centralwidget = QtWidgets.QWidget()
 
         self.gl_widget = GLWidget()
-        self.control = loadUi('simcontrolwidget.ui', self)
+        self.control = self.loadUi('simcontrolwidget.ui', self)
 
         self.layout.addWidget(self.gl_widget)
         self.layout.addWidget(self.control)
@@ -116,14 +116,43 @@ class Window(QMainWindow):
         self.control.pushButton_Run.clicked.connect(self.OnSimRun)
         self.control.pushButton_Pause.clicked.connect(self.OnSimPause)
 
-        self.control.horizontalSlider_Position.valueChanged.connect(self.OnSimAtTime)
-
         self.sim_start = 0
         self.sim_end = 10
         self.sim_delta = 0.1
+
+        self.control.horizontalSlider_Position.valueChanged.connect(self.OnSimAtTime)
+        self.control.horizontalSlider_Position.setMinimum(self.sim_start*1000)
+        self.control.horizontalSlider_Position.setMaximum(self.sim_end*1000)
+        self.control.horizontalSlider_Position.setSingleStep(1)
         
-        self.simulation = Simulation(self.sim_start, self.sim_end, self.sim_delta)
-        self.gl_widget.setSimulation(self.simulation)
+        self.simulation = Simulation(self, self.sim_start, self.sim_end, self.sim_delta)
+
+        self.update_gl_scene.connect(self.update_gl)
+
+    def update_gl(self):
+        '''
+        '''
+        self.gl_widget.update()
+
+    def sim_time_changed(self, simtime: float):
+        '''
+        '''
+        self.control.horizontalSlider_Position.setValue(simtime*1000)
+
+        # inform openGL to redraw
+        # 1. set the new model position
+        self.gl_widget.set_model_position(self.simulation.model_position)
+        # 2. opegGL redraw
+        self.update_gl_scene.emit()
+
+    def loadUi(self, uifile, baseinstance=None):
+        '''
+        '''
+        loader = QUiLoader(baseinstance)
+
+        widget = loader.load(uifile)
+
+        return widget
 
     def OnSimToEnd(self):
         timer_on = self.simulation.timer_on
@@ -153,7 +182,7 @@ class Window(QMainWindow):
         if timer_on:
             self.simulation.stop_timer()
 
-        self.simulation.set_current_time(time)
+        self.simulation.set_current_time(time / 1000.0)
 
         if timer_on:
             self.simulation.start_timer()
@@ -243,7 +272,6 @@ class Scene():
         return QVector3D(1, 1, 1)
     
 
-
 class GLWidget(QOpenGLWidget, QOpenGLFunctions):
     '''
     '''
@@ -301,8 +329,6 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
     def __init__(self, parent=None):
         QOpenGLWidget.__init__(self, parent)
         QOpenGLFunctions.__init__(self)
-
-        self.simulation = None
 
         self.m_xRot = 90.0 
         self.m_yRot = 0.0 
@@ -391,11 +417,6 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.ibo = QOpenGLBuffer()
         self.texture = QOpenGLTexture(QOpenGLTexture.Target2D)
         self.program = QOpenGLShaderProgram()
-
-    def setSimulation(self, simulation):
-        '''
-        '''
-        self.simulation = simulation
 
     def placeVisualizerButtons(self):
         self.cmdIsometric.move(self.width() - self.cmdIsometric.width() - 8, 8)
@@ -553,6 +574,10 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.view.translate(-self.m_xLookAt, -self.m_yLookAt, -self.m_zLookAt)
 
         self.view.rotate(-90, 1.0, 0.0, 0.0)
+
+    def set_model_position(self, position: QVector3D):
+        self.model.setToIdentity()
+        self.model.translate(position)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         self.m_lastPos = event.position()
