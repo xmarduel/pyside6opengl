@@ -86,7 +86,7 @@ class Scene():
         self.nb_float = 24 * Vertex.nb_float
         self.nb_int = 36
 
-        self.textureData = QImage("./crate.png")
+        self.textureData = QImage("./pics/crate.png")
 
     def const_vertex_data(self):
         return self.vertices.tobytes()

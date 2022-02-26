@@ -1,4 +1,5 @@
 
+from argparse import Action
 import ctypes
 import math
 import numpy as np
@@ -19,19 +20,151 @@ from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 from OpenGL import GL
 
+from PySide6.QtUiTools import QUiLoader
+
+
 M_PI = math.acos(-1)
 ZOOMSTEP = 1.1
+
+
+def loadUi(uifile, baseinstance=None):
+    '''
+    '''
+    loader = QUiLoader(baseinstance)
+
+    widget = loader.load(uifile)
+
+    return widget
+
+
+class Simulation:
+    '''
+    '''
+    def __init__(self, init_time, end_time, delta):
+        self.init_time = init_time
+        self.end_time = end_time
+        self.delta = delta
+
+        self.total_time = self.end_time - self.init_time
+
+        self.current_time = self.init_time
+
+        self.view_state = {
+            "theta" : 0,
+            "phi": 0
+        }
+
+        self.set_current_time(self.end_time)
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        
+        self.timer_on = False
+
+    def set_current_time(self, current_time):
+        self.current_time = current_time
+        self.eval_current_view_state()
+
+    def eval_current_view_state(self):
+        '''
+        should act on the model, not on the view,
+        but it is a beginning...
+        '''
+        self.view_state = {
+            "theta" : M_PI * (self.current_time / self.total_time),
+            "phi": M_PI * (self.current_time / self.total_time),
+        }
+
+    def start_timer(self):
+        if self.timer_on == False:
+            self.timer_on = True
+            self.timer.start(self.delta)
+
+    def stop_timer(self):
+        if self.timer_on == True:
+            self.timer.stop()
+            self.timer_on = False
+
+    def update(self):
+        current_time = self.current_time = self.delta
+        
+        if current_time >= self.end_time:
+            current_time = self.init_time
+
+        self.set_current_time(current_time)
 
 
 class Window(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
-        self.gl_widget = GLWidget()
+        self.layout = QtWidgets.QVBoxLayout()
+        self.centralwidget = QtWidgets.QWidget()
 
-        self.setCentralWidget(self.gl_widget)
+        self.gl_widget = GLWidget()
+        self.control = loadUi('simcontrolwidget.ui', self)
+
+        self.layout.addWidget(self.gl_widget)
+        self.layout.addWidget(self.control)
+
+        self.centralwidget.setLayout(self.layout)
+        self.setCentralWidget(self.centralwidget)
         self.setWindowTitle(self.tr("Hello GL"))
 
+        self.control.pushButton_ToEnd.clicked.connect(self.OnSimToEnd)
+        self.control.pushButton_Rewind.clicked.connect(self.OnSimRewind)
+        self.control.pushButton_Run.clicked.connect(self.OnSimRun)
+        self.control.pushButton_Pause.clicked.connect(self.OnSimPause)
+
+        self.control.horizontalSlider_Position.valueChanged.connect(self.OnSimAtTime)
+
+        self.sim_start = 0
+        self.sim_end = 10
+        self.sim_delta = 0.1
+        
+        self.simulation = Simulation(self.sim_start, self.sim_end, self.sim_delta)
+        self.gl_widget.setSimulation(self.simulation)
+
+    def OnSimToEnd(self):
+        timer_on = self.simulation.timer_on
+        
+        if timer_on:
+            self.simulation.stop_timer()
+        
+        self.simulation.set_current_time(self.sim_end)
+        
+        if timer_on:
+            self.simulation.start_timer()
+
+    def OnSimRewind(self):
+        timer_on = self.simulation.timer_on
+
+        if timer_on:
+            self.simulation.stop_timer()
+
+        self.simulation.set_current_time(self.sim_start)
+
+        if timer_on:
+            self.simulation.start_timer()
+    
+    def OnSimAtTime(self, time):
+        timer_on = self.simulation.timer_on
+
+        if timer_on:
+            self.simulation.stop_timer()
+
+        self.simulation.set_current_time(time)
+
+        if timer_on:
+            self.simulation.start_timer()
+
+    def OnSimRun(self):
+        self.simulation.start_timer()
+
+    def OnSimPause(self):
+        self.simulation.stop_timer()
+    
+    
 class Vertex:
     nb_float = 9
     bytes_size = nb_float * 4 #  4 bytes each
@@ -169,6 +302,8 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         QOpenGLWidget.__init__(self, parent)
         QOpenGLFunctions.__init__(self)
 
+        self.simulation = None
+
         self.m_xRot = 90.0 
         self.m_yRot = 0.0 
         self.m_xLastRot = 0.0 
@@ -257,11 +392,12 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.texture = QOpenGLTexture(QOpenGLTexture.Target2D)
         self.program = QOpenGLShaderProgram()
 
+    def setSimulation(self, simulation):
+        '''
+        '''
+        self.simulation = simulation
 
     def placeVisualizerButtons(self):
-        w = self.width()
-        cmdIsometric_w =  self.cmdIsometric.width() 
-
         self.cmdIsometric.move(self.width() - self.cmdIsometric.width() - 8, 8)
         self.cmdTop.move(self.cmdIsometric.geometry().left() - self.cmdTop.width() - 8, 8)
         self.cmdLeft.move(self.width() - self.cmdLeft.width() - 8, self.cmdIsometric.geometry().bottom() + 8)
@@ -611,10 +747,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
     def resizeGL(self, width, height):
         ratio = width / float(height)
         self.proj.perspective(45.0, ratio, 2.0, 100.0)
-
-    # --------------------------------------------------------------------------
-    # --------------------------------------------------------------------------
-     
+ 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
