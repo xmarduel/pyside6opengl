@@ -198,15 +198,15 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
         self.m_xRotStored = 0.0  
         self.m_yRotStored = 0.0 
 
-        self.model = QMatrix4x4()
-        self.model.setToIdentity()
-
         self.proj = QMatrix4x4()
         self.proj.setToIdentity()
 
         self.view = QMatrix4x4()
         self.view.setToIdentity()
         self.view.translate(QVector3D(0,0,-5))
+
+        self.model = QMatrix4x4()
+        self.model.setToIdentity()
 
         self.updateProjection()
         self.updateView()
