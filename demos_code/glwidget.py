@@ -23,7 +23,7 @@ M_PI = math.acos(-1)
 ZOOMSTEP = 1.1
 
 
-class Window(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
@@ -109,7 +109,6 @@ class Scene():
     def getMaximumExtremes(self) -> QVector3D :
         return QVector3D(1, 1, 1)
     
-
 
 class GLWidget(QOpenGLWidget, QOpenGLFunctions):
     '''
@@ -619,7 +618,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    main_window = Window()
+    main_window = MainWindow()
     main_window.show()
 
     res = app.exec()

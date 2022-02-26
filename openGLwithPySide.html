@@ -2210,6 +2210,158 @@ easier to define groups of 4 nodes, each group for each side of the cube: The
 numpy compact notation makes the whole somehow obscure...</p>
 <!-- ----------------------------------------------------------------------------------------------------------->
 <!-- ----------------------------------------------------------------------------------------------------------->
+
+<h2 id="P-06">PySide6 - Handling the mouse</h2>
+<h2 id="P-07">PySide6 - Simulation Widgets</h2>
+
+<p>Infact quite straighforward: we have a "Simulation object" managing the time of the simulation. When the simulation's time changes,
+(and thus the position of the model) a signal is emitted. The receiver helds the new model position from the simulation 
+and inform the gl widget to redraw with this new position.</p>
+</p>
+
+<pre style="background: #f2f2f2;"><code class="language-python">
+class Simulation(QtCore.QObject):
+    '''
+    '''
+    current_time_changed = Signal(float)
+
+    def __init__(self, parent, init_time, end_time, delta):
+        QtCore.QObject.__init__(self)
+
+        self.parent = parent
+    
+        self.init_time = init_time
+        self.end_time = end_time
+        self.delta = delta
+
+        self.total_time = self.end_time - self.init_time
+
+        self.current_time = self.init_time
+
+        # translating the model during the simulation 
+        self.model_position = QVector3D(0, 0, 0)
+
+        self.set_current_time(self.end_time)
+        self.current_time_changed.connect(self.parent.sim_time_changed)
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.run)
+    
+        self.timer_on = False
+   
+    def set_current_time(self, current_time):
+        '''
+        '''
+        self.current_time = current_time
+        self.model_position = QVector3D(
+            math.sin(2* M_PI * (self.current_time / self.total_time)),
+            -1 + math.cos( 2* M_PI * (self.current_time / self.total_time)),
+            math.sin(2 * M_PI * (self.current_time / self.total_time))
+        )
+
+        self.current_time_changed.emit(self.current_time)
+
+    def start_timer(self):
+        if self.timer_on == False:
+            self.timer_on = True
+            self.timer.start(self.delta)
+
+    def stop_timer(self):
+        if self.timer_on == True:
+            self.timer.stop()
+            self.timer_on = False
+
+    def run(self):
+        '''
+        callback on timer
+        '''
+        current_time = self.current_time + self.delta
+    
+        if current_time >= self.end_time:
+            current_time = self.init_time
+
+        self.set_current_time(current_time)
+</code></pre>
+
+<p>This is the code of the app main window: it contains the gl widget, the simulation widgets and the simulation object.
+The simulation widgets talk to the simulation object, which gives back the signal when something in the simulation has changed.
+On this signal, the main window inform the gl widget to update himself
+</p>
+
+<pre style="background: #f2f2f2;"><code class="language-python">class MainWindow(QMainWindow):
+    '''
+    '''
+    update_gl_scene = Signal()
+
+    def __init__(self, parent=None):
+        QMainWindow.__init__(self, parent)
+
+        self.layout = QtWidgets.QVBoxLayout()
+        self.centralwidget = QtWidgets.QWidget()
+
+        self.gl_widget = GLWidget()
+        self.control = self.loadUi('simcontrolwidget.ui', self)
+
+        self.layout.addWidget(self.gl_widget)
+        self.layout.addWidget(self.control)
+
+        self.centralwidget.setLayout(self.layout)
+        self.setCentralWidget(self.centralwidget)
+        self.setWindowTitle(self.tr("Hello GL"))
+
+        self.control.pushButton_ToEnd.clicked.connect(self.OnSimToEnd)
+        self.control.pushButton_Rewind.clicked.connect(self.OnSimRewind)
+        self.control.pushButton_Run.clicked.connect(self.OnSimRun)
+        self.control.pushButton_Pause.clicked.connect(self.OnSimPause)
+
+        self.sim_start = 0
+        self.sim_end = 10
+        self.sim_delta = 0.1
+
+        self.control.horizontalSlider_Position.valueChanged.connect(self.OnSimAtTime)
+        self.control.horizontalSlider_Position.setMinimum(self.sim_start*1000)
+        self.control.horizontalSlider_Position.setMaximum(self.sim_end*1000)
+        self.control.horizontalSlider_Position.setSingleStep(1)
+        
+        self.simulation = Simulation(self, self.sim_start, self.sim_end, self.sim_delta)
+
+        self.update_gl_scene.connect(self.update_gl)
+
+    def update_gl(self):
+        '''
+        '''
+        self.gl_widget.update()
+
+    def sim_time_changed(self, simtime: float):
+        '''
+        The slot which is called when the simulation ticks
+        '''
+        self.control.horizontalSlider_Position.setValue(simtime*1000)
+
+        # inform openGL to redraw
+        # 1. set the new model position
+        self.gl_widget.set_model_position(self.simulation.model_position)
+        # 2. opegGL redraw
+        self.update_gl_scene.emit()
+</code></pre>
+
+<h2 id="P-08">PySide6 - Moving the tool along the path</h2>
+<h2 id="P-09">PySide6 - Simulating the milling process</h2>
+
+<p>A brute force algorithm... I am quite interested about the performance... </p>
+
+<p>So we define a "stock" of 1024x140 quadrats. For the height, the number of "z levels" in taken from the
+g code. If there are for example 10 z levels, then I will define 1024x1024x10 voxels. Note that each voxel
+consist of 12 triangles. The height of the voxels derives from the g cocde too.</p>
+
+<p>Each voxel has a texture with an alpha channel. And each voxel "hit" by the toolpath should turn
+invisible. So each voxel has an extra attribute "hit_time" when the toolpath effectively hits the voxel.
+So the whole work consists in assigning each voxel of the stock an "hit_time" (with a texture).</p>
+
+<!-- ----------------------------------------------------------------------------------------------------------->
+<!-- ----------------------------------------------------------------------------------------------------------->
+
+
 </div>
 <script type="text/javascript">
 var acc = document.getElementsByClassName("accordion");

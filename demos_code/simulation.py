@@ -90,7 +90,7 @@ class Simulation(QtCore.QObject):
         self.set_current_time(current_time)
 
 
-class Window(QMainWindow):
+class MainWindow(QMainWindow):
     '''
     '''
     update_gl_scene = Signal()
@@ -777,7 +777,7 @@ class GLWidget(QOpenGLWidget, QOpenGLFunctions):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    main_window = Window()
+    main_window = MainWindow()
     main_window.show()
 
     res = app.exec()
